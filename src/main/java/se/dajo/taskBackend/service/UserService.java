@@ -8,6 +8,7 @@ import se.dajo.taskBackend.model.data.User;
 import se.dajo.taskBackend.repository.TaskRepository;
 import se.dajo.taskBackend.repository.TeamRepository;
 import se.dajo.taskBackend.repository.UserRepository;
+import se.dajo.taskBackend.repository.data.IssueDTO;
 import se.dajo.taskBackend.repository.data.TaskDTO;
 import se.dajo.taskBackend.repository.data.TeamDTO;
 import se.dajo.taskBackend.repository.data.UserDTO;
@@ -15,9 +16,11 @@ import org.springframework.stereotype.Service;
 import se.dajo.taskBackend.repository.parsers.TaskParser;
 import se.dajo.taskBackend.repository.parsers.UserParser;
 import se.dajo.taskBackend.resource.param.UserParam;
+import se.dajo.taskBackend.service.exception.InvalidPagingRequestException;
 import se.dajo.taskBackend.service.exception.InvalidSpaceInTeamException;
 import se.dajo.taskBackend.service.exception.InvalidUserNumberException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -68,12 +71,41 @@ public final class UserService {
         return new User(userDTO.getFirstName(), userDTO.getSurName(), userDTO.getUserNumber(), userDTO.getStatus());
     }
 
-    public List<User> getUserByFirstNAmeOrSurNameOrUserNumber(UserParam userParam) {
-        List<User> user = checkUserParams(userParam);
-        if (user.size() == 0) {
-            throw new InvalidUserNumberException();
+    public List<User> getUserByFirstNAmeOrSurNameOrUserNumber(UserParam param) {
+         if (param.firstName != null && param.surName == null && param.userNumber == null) {
+            return UserParser.toUserList(userRepository.findByFirstName(param.firstName));
+        } else if (param.firstName == null && param.surName != null && param.userNumber == null) {
+            return UserParser.toUserList(userRepository.findBySurName(param.surName));
+        } else if (param.firstName == null && param.surName == null && param.userNumber != null) {
+            return UserParser.toUserList(userRepository.findByUserNumber(param.userNumber));
+        } else if (param.firstName != null && param.surName != null && param.userNumber == null) {
+            return UserParser.toUserList(userRepository.findByFirstNameAndSurName(param.firstName, param.surName));
+        } else if (param.firstName != null && param.surName == null && param.userNumber != null) {
+            return UserParser.toUserList(userRepository.findByFirstNameAndUserNumber(param.firstName, param.userNumber));
+        } else if (param.firstName == null && param.surName != null && param.userNumber != null) {
+            return UserParser.toUserList(userRepository.findBySurNameAndUserNumber(param.surName, param.userNumber));
+        } else if(param.start != null && param.display != null){
+            List<UserDTO> userDTOS = userRepository.findAllOrderedById();
+            return UserParser.toUserList(createListPaged(userDTOS, param.start, param.display));
+        } else if (param.firstName == null && param.surName == null && param.userNumber == null) {
+            return UserParser.toUserList(Lists.newArrayList(userRepository.findAll()));
+        } else {
+            return UserParser.toUserList(userRepository.findByFirstNameAndSurNameAndUserNumber(param.firstName, param.surName, param.userNumber));
         }
-        return user;
+    }
+
+    private List<UserDTO> createListPaged(List<UserDTO> userDTOS, Integer start, Integer display) {
+        if(start <= userDTOS.size()){
+            List<UserDTO> usersPaged = new ArrayList<>();
+            for (int i = start -1; i < start-1 + display; i++){
+                if(userDTOS.size() > i){
+                    usersPaged.add(userDTOS.get(i));
+                }
+            }
+            return usersPaged;
+        } else {
+            throw new InvalidPagingRequestException("");
+        }
     }
 
     public List<Task> getUsersTasks(Long userNumber) {
@@ -96,26 +128,6 @@ public final class UserService {
     private void updateUsersTasks(UserDTO userDTO) {
         if (userDTO.getStatus().equals(Status.INACTIVE)) {
             taskRepository.setUsersTasksUnstarted(userDTO.getId());
-        }
-    }
-
-    private List<User> checkUserParams(UserParam param) {
-        if (param.firstName == null && param.surName == null && param.userNumber == null) {
-            return UserParser.toUserList(Lists.newArrayList(userRepository.findAll()));
-        } else if (param.firstName != null && param.surName == null && param.userNumber == null) {
-            return UserParser.toUserList(userRepository.findByFirstName(param.firstName));
-        } else if (param.firstName == null && param.surName != null && param.userNumber == null) {
-            return UserParser.toUserList(userRepository.findBySurName(param.surName));
-        } else if (param.firstName == null && param.surName == null && param.userNumber != null) {
-            return UserParser.toUserList(userRepository.findByUserNumber(param.userNumber));
-        } else if (param.firstName != null && param.surName != null && param.userNumber == null) {
-            return UserParser.toUserList(userRepository.findByFirstNameAndSurName(param.firstName, param.surName));
-        } else if (param.firstName != null && param.surName == null && param.userNumber != null) {
-            return UserParser.toUserList(userRepository.findByFirstNameAndUserNumber(param.firstName, param.userNumber));
-        } else if (param.firstName == null && param.surName != null && param.userNumber != null) {
-            return UserParser.toUserList(userRepository.findBySurNameAndUserNumber(param.surName, param.userNumber));
-        } else {
-            return UserParser.toUserList(userRepository.findByFirstNameAndSurNameAndUserNumber(param.firstName, param.surName, param.userNumber));
         }
     }
 }
