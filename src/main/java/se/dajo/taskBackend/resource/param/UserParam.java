@@ -12,4 +12,10 @@ public final class UserParam {
 
     @QueryParam("userNumber")
     public Long userNumber;
+
+    @QueryParam("start")
+    public Integer start;
+
+    @QueryParam("display")
+    public Integer display;
 }

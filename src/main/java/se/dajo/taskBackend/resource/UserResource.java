@@ -37,6 +37,7 @@ public final class UserResource {
     }
 
     @POST
+    @Auth
     public Response createUser(User user) {
         user = userService.saveUser(user);
         return Response.status(CREATED).header("Location", uriInfo.getAbsolutePathBuilder()

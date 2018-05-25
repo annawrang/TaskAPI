@@ -1,11 +1,11 @@
 package se.dajo.taskBackend.resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import se.dajo.taskBackend.model.data.Issue;
 import se.dajo.taskBackend.model.data.Task;
-import org.springframework.stereotype.Component;
-import se.dajo.taskBackend.service.IssueService;
 import se.dajo.taskBackend.resource.param.TaskParam;
+import se.dajo.taskBackend.service.IssueService;
 import se.dajo.taskBackend.service.TaskService;
 
 import javax.ws.rs.*;
@@ -13,7 +13,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
 import java.util.List;
 
 import static javax.ws.rs.core.Response.Status.ACCEPTED;
@@ -38,6 +37,7 @@ public final class TaskResource {
     }
 
     @POST
+    @Auth
     public Response createTask(Task task) {
         task = taskService.saveTask(task);
         return Response.status(CREATED).header("Location", uriInfo.getAbsolutePathBuilder()
@@ -45,6 +45,7 @@ public final class TaskResource {
     }
 
     @POST
+    @Auth
     @Path("{taskNumber}/issues")
     public Response createIssue(@PathParam("taskNumber") Long taskNumber, Issue issue) {
         issueService.saveIssue(issue, taskNumber);

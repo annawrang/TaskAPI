@@ -12,4 +12,17 @@ public final class TaskParam {
 
     @QueryParam("issue")
     public Boolean issue;
+
+    @QueryParam("start")
+    public Integer start;
+
+    @QueryParam("display")
+    public Integer display;
+
+    @QueryParam("fromDate")
+    public String fromDate;
+
+    @QueryParam("toDate")
+    public String toDate;
+
 }

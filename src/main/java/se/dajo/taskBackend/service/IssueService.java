@@ -11,8 +11,13 @@ import se.dajo.taskBackend.repository.data.IssueDTO;
 import se.dajo.taskBackend.repository.data.TaskDTO;
 import se.dajo.taskBackend.repository.parsers.IssueParser;
 import se.dajo.taskBackend.repository.parsers.TaskParser;
+import se.dajo.taskBackend.resource.param.IssueParam;
+import se.dajo.taskBackend.service.exception.InvalidPagingRequestException;
 import se.dajo.taskBackend.service.exception.InvalidStatusException;
 import se.dajo.taskBackend.service.exception.InvalidTaskNumberException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static se.dajo.taskBackend.enums.TaskStatus.UNSTARTED;
 
@@ -45,5 +50,33 @@ public final class IssueService {
         task.setStatus(UNSTARTED);
         taskService.saveTask(task);
         return IssueParser.parseIssueDTOToIssue(issueDTO);
+    }
+
+    public List<Issue> getAllIssues(IssueParam param) {
+        List<IssueDTO> issueDTOS = issueRepository.findAllOrderedByDescription();
+        if(param.display == null && param.start == null){
+            return IssueParser.toIssueList(issueDTOS);
+        } else if (param.start != null && param.display != null){
+            List<IssueDTO> limitedList;
+            limitedList = createListPage(issueDTOS, param.start, param.display);
+            return IssueParser.toIssueList(limitedList);
+        } else{
+            throw new InvalidPagingRequestException("");
+        }
+
+    }
+
+    private List<IssueDTO> createListPage(List<IssueDTO> issueDTOS, Integer start, Integer display) {
+        if(start <= issueDTOS.size()){
+            List<IssueDTO> issuesPaged = new ArrayList<>();
+            for (int i = start -1; i < start-1 + display; i++){
+                if(issueDTOS.size() > i){
+                    issuesPaged.add(issueDTOS.get(i));
+                }
+            }
+            return issuesPaged;
+        } else {
+            throw new InvalidPagingRequestException("");
+        }
     }
 }

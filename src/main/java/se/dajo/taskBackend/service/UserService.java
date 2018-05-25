@@ -107,7 +107,7 @@ public final class UserService {
             throw new InvalidPagingRequestException("");
         }
     }
-
+// 
     public List<Task> getUsersTasks(Long userNumber) {
         UserDTO userDTO = userRepository.findUserDTOByUserNumber(userNumber);
         validateUserNumber(userDTO);

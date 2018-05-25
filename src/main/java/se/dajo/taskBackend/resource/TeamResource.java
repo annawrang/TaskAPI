@@ -36,6 +36,7 @@ public final class TeamResource {
     }
 
     @POST
+    @Auth
     public Response createTeam(Team team) {
         team = teamService.saveTeam(team);
         return Response.status(CREATED).header("Location",

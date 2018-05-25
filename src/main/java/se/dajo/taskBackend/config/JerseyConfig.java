@@ -1,20 +1,26 @@
 package se.dajo.taskBackend.config;
 
-import se.dajo.taskBackend.resource.TaskResource;
-import se.dajo.taskBackend.resource.TeamResource;
-import se.dajo.taskBackend.resource.UserResource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import org.springframework.context.annotation.Bean;
+import se.dajo.taskBackend.resource.Auth;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.context.annotation.Configuration;
-import se.dajo.taskBackend.resource.mapper.*;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 @Configuration
 public class JerseyConfig extends ResourceConfig {
 
     public JerseyConfig() {
-        register(UserResource.class);
-        register(TeamResource.class);
-        register(TaskResource.class);
-        register(GeneralExceptionMapper.class);
+        packages("se.dajo.taskBackend.resource");
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        return new ObjectMapper().registerModule(new ParameterNamesModule()).setDateFormat(df);
     }
 }
 
